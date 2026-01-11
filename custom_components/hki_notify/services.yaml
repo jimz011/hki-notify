@@ -1,0 +1,142 @@
+create:
+  name: Create Notification
+  description: Sends or updates a notification on the HKI Notify sensor.
+  target:
+    entity:
+      integration: hki_notify
+      domain: sensor
+  fields:
+    # --- CORE ---
+    id:
+      name: ID
+      required: true
+      selector:
+        text:
+    message:
+      name: Message
+      required: true
+      selector:
+        text:
+          multiline: true
+    icon:
+      name: Icon
+      default: "mdi:bell"
+      selector:
+        icon:
+    icon_spin:
+      name: Spin Icon
+      default: false
+      selector:
+        boolean:
+
+    # --- ACTIONS ---
+    action_type:
+      name: Tap Action Type
+      description: "Choose 'Call Service' to use the Service Picker below, or 'Navigate/URL' for the Path field."
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - label: "Call Service"
+              value: "call-service"
+            - label: "Navigate (Internal)"
+              value: "navigate"
+            - label: "Open URL (External)"
+              value: "url"
+            - label: "Do Nothing"
+              value: "none"
+    
+    # OPTION A: For Services
+    service_action:
+      name: Service to Call
+      description: "Only used if Type is 'Call Service'. Pick the service (e.g. Light: Turn On) and target here."
+      selector:
+        action: {}
+
+    # OPTION B: For Navigation/URL
+    navigation_path:
+      name: Navigation Path / URL
+      description: "Only used if Type is 'Navigate' (e.g. '/lovelace/home') or 'Open URL' (e.g. 'https://google.com')."
+      selector:
+        text:
+
+    # --- CONFIRMATION ---
+    confirm:
+      name: Require Confirmation
+      description: "Override the card's confirmation setting for this notification. If set, this takes priority over the card's global setting."
+      selector:
+        boolean:
+    confirm_message:
+      name: Confirmation Message
+      description: "Custom message to display in the confirmation dialog. If not set, the action type will be shown."
+      selector:
+        text:
+          multiline: true
+
+    # --- STYLING ---
+    text_color:
+      name: Text Color
+      selector:
+        color_rgb:
+    icon_color:
+      name: Icon Color
+      selector:
+        color_rgb:
+    bg_color:
+      name: Background Color
+      selector:
+        color_rgb:
+    border_color:
+      name: Border Color
+      selector:
+        color_rgb:
+    font_size:
+      name: Font Size (px)
+      selector:
+        number: {min: 8, max: 100, unit_of_measurement: "px"}
+    font_weight:
+      name: Font Weight
+      selector:
+        select:
+          mode: dropdown
+          options: ["Light", "Regular", "Medium", "Semi Bold", "Bold", "Extra Bold"]
+    alignment:
+      name: Text Alignment
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - label: Left
+              value: left
+            - label: Center
+              value: center
+            - label: Right
+              value: right
+    border_radius:
+      name: Border Radius (px)
+      selector:
+        number: {min: 0, max: 50, unit_of_measurement: "px"}
+    box_shadow:
+      name: Box Shadow
+      selector:
+        text:
+
+dismiss:
+  name: Dismiss Notification
+  target:
+    entity:
+      integration: hki_notify
+      domain: sensor
+  fields:
+    id:
+      name: ID
+      required: true
+      selector:
+        text:
+
+dismiss_all:
+  name: Dismiss All
+  target:
+    entity:
+      integration: hki_notify
+      domain: sensor
