@@ -20,11 +20,14 @@ ATTR_ID = "id"
 ATTR_MESSAGE = "message"
 ATTR_ICON = "icon"
 ATTR_ICON_SPIN = "icon_spin"
+ATTR_SHOW_ICON = "show_icon"  # New
 
 # Color attributes
 ATTR_TEXT_COLOR = "text_color"
 ATTR_ICON_COLOR = "icon_color"
 ATTR_BG_COLOR = "bg_color"
+ATTR_BG_OPACITY = "bg_opacity"  # New
+ATTR_SHOW_BACKGROUND = "show_background"  # New
 ATTR_BORDER_COLOR = "border_color"
 
 # Typography attributes
@@ -73,11 +76,14 @@ CREATE_SCHEMA = vol.Schema({
     # Icon
     vol.Optional(ATTR_ICON, default="mdi:bell"): cv.string,
     vol.Optional(ATTR_ICON_SPIN, default=False): cv.boolean,
+    vol.Optional(ATTR_SHOW_ICON): cv.boolean,
     
-    # Colors
+    # Colors & Background
     vol.Optional(ATTR_TEXT_COLOR): vol.Any(cv.string, list),
     vol.Optional(ATTR_ICON_COLOR): vol.Any(cv.string, list),
     vol.Optional(ATTR_BG_COLOR): vol.Any(cv.string, list),
+    vol.Optional(ATTR_BG_OPACITY): vol.Coerce(float),
+    vol.Optional(ATTR_SHOW_BACKGROUND): cv.boolean,
     vol.Optional(ATTR_BORDER_COLOR): vol.Any(cv.string, list),
     
     # Typography
@@ -153,11 +159,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 else:
                     new_msg[attr] = val
         
-        # 2. Handle Typography, Border, Layout
+        # 2. Handle Typography, Border, Layout, and Misc Visibility
         direct_attrs = [
             ATTR_FONT_SIZE, ATTR_FONT_WEIGHT, ATTR_FONT_FAMILY,
             ATTR_BORDER_RADIUS, ATTR_BORDER_WIDTH, ATTR_BOX_SHADOW,
-            ATTR_ALIGNMENT
+            ATTR_ALIGNMENT, ATTR_BG_OPACITY, ATTR_SHOW_BACKGROUND,
+            ATTR_SHOW_ICON
         ]
         for attr in direct_attrs:
             if attr in call.data:
@@ -167,39 +174,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         action_type = call.data.get(ATTR_ACTION_TYPE)
         
         # FIX: Auto-detect 'call-service' if not set but service data is present
-        # This handles cases where the UI Action selector is used but 'action_type' dropdown is empty
         if not action_type and call.data.get(ATTR_SERVICE_ACTION):
             action_type = "call-service"
         
         if action_type:
             action_obj = {"action": action_type}
             
-            # --- CASE A: Service Call (Complex conversion) ---
             if action_type == "call-service":
                 raw_actions = call.data.get(ATTR_SERVICE_ACTION)
                 
                 if raw_actions and len(raw_actions) > 0:
                     first_action = raw_actions[0]
-                    
-                    # 1. Get Service Name (Handles new 'action' key or old 'service' key)
                     service_name = first_action.get("action") or first_action.get("service")
                     if service_name:
                         action_obj["service"] = service_name
                     
-                    # 2. Merge 'target' and 'data' into 'service_data'
                     service_data = {}
-                    
                     if "data" in first_action:
                         service_data.update(first_action["data"])
-                    
                     if "target" in first_action:
-                        # Flatten target (e.g., {'entity_id': 'light.bed'}) into service_data
                         service_data.update(first_action["target"])
                     
                     if service_data:
                         action_obj["service_data"] = service_data
 
-            # --- CASE B: Navigation / URL ---
             elif action_type == "navigate":
                 action_obj["navigation_path"] = call.data.get(ATTR_NAVIGATION_PATH)
             elif action_type == "url":
@@ -208,7 +206,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             new_msg["tap_action"] = action_obj
             
         elif ATTR_TAP_ACTION in call.data:
-            # Legacy fallback
             new_msg["tap_action"] = call.data[ATTR_TAP_ACTION]
 
         # 4. Handle Confirmation override
