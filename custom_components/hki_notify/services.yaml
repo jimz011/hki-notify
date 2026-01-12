@@ -28,6 +28,11 @@ create:
       default: false
       selector:
         boolean:
+    show_icon:
+      name: Show Icon
+      description: "Force show or hide the icon for this specific notification."
+      selector:
+        boolean:
 
     # --- ACTIONS ---
     action_type:
@@ -63,12 +68,12 @@ create:
     # --- CONFIRMATION ---
     confirm:
       name: Require Confirmation
-      description: "Override the card's confirmation setting for this notification. If set, this takes priority over the card's global setting."
+      description: "Override the card's confirmation setting for this notification."
       selector:
         boolean:
     confirm_message:
       name: Confirmation Message
-      description: "Custom message to display in the confirmation dialog. If not set, the action type will be shown."
+      description: "Custom message to display in the confirmation dialog."
       selector:
         text:
           multiline: true
@@ -86,6 +91,16 @@ create:
       name: Background Color
       selector:
         color_rgb:
+    bg_opacity:
+      name: Background Opacity
+      description: "Set opacity (0.0 to 1.0) for the background color."
+      selector:
+        number: {min: 0, max: 1, step: 0.1, mode: slider}
+    show_background:
+      name: Show Background
+      description: "Show or hide the background pill for this notification."
+      selector:
+        boolean:
     border_color:
       name: Border Color
       selector:
