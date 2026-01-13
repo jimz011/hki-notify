@@ -1,5 +1,6 @@
 import logging
 import voluptuous as vol
+import homeassistant.util.dt as dt_util  # <--- NEW IMPORT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import config_validation as cv
@@ -20,14 +21,12 @@ ATTR_ID = "id"
 ATTR_MESSAGE = "message"
 ATTR_ICON = "icon"
 ATTR_ICON_SPIN = "icon_spin"
-ATTR_SHOW_ICON = "show_icon"  # New
+ATTR_TIMESTAMP = "timestamp"  # <--- NEW CONSTANT
 
 # Color attributes
 ATTR_TEXT_COLOR = "text_color"
 ATTR_ICON_COLOR = "icon_color"
 ATTR_BG_COLOR = "bg_color"
-ATTR_BG_OPACITY = "bg_opacity"  # New
-ATTR_SHOW_BACKGROUND = "show_background"  # New
 ATTR_BORDER_COLOR = "border_color"
 
 # Typography attributes
@@ -76,14 +75,14 @@ CREATE_SCHEMA = vol.Schema({
     # Icon
     vol.Optional(ATTR_ICON, default="mdi:bell"): cv.string,
     vol.Optional(ATTR_ICON_SPIN, default=False): cv.boolean,
-    vol.Optional(ATTR_SHOW_ICON): cv.boolean,
     
-    # Colors & Background
+    # NEW: Optional timestamp override
+    vol.Optional(ATTR_TIMESTAMP): cv.string,
+
+    # Colors
     vol.Optional(ATTR_TEXT_COLOR): vol.Any(cv.string, list),
     vol.Optional(ATTR_ICON_COLOR): vol.Any(cv.string, list),
     vol.Optional(ATTR_BG_COLOR): vol.Any(cv.string, list),
-    vol.Optional(ATTR_BG_OPACITY): vol.Coerce(float),
-    vol.Optional(ATTR_SHOW_BACKGROUND): cv.boolean,
     vol.Optional(ATTR_BORDER_COLOR): vol.Any(cv.string, list),
     
     # Typography
@@ -142,11 +141,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return targets
 
     def handle_create(call: ServiceCall):
+        # NEW: Handle Timestamp logic
+        # Use provided timestamp or current time (ISO Format)
+        ts = call.data.get(ATTR_TIMESTAMP)
+        if not ts:
+            ts = dt_util.now().isoformat()
+
         new_msg = {
             "id": call.data[ATTR_ID],
             "message": call.data[ATTR_MESSAGE],
             "icon": call.data[ATTR_ICON],
             "icon_spin": call.data[ATTR_ICON_SPIN],
+            "timestamp": ts,  # <--- Added here
         }
         
         # 1. Handle Colors
@@ -159,12 +165,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 else:
                     new_msg[attr] = val
         
-        # 2. Handle Typography, Border, Layout, and Misc Visibility
+        # 2. Handle Typography, Border, Layout
         direct_attrs = [
             ATTR_FONT_SIZE, ATTR_FONT_WEIGHT, ATTR_FONT_FAMILY,
             ATTR_BORDER_RADIUS, ATTR_BORDER_WIDTH, ATTR_BOX_SHADOW,
-            ATTR_ALIGNMENT, ATTR_BG_OPACITY, ATTR_SHOW_BACKGROUND,
-            ATTR_SHOW_ICON
+            ATTR_ALIGNMENT
         ]
         for attr in direct_attrs:
             if attr in call.data:
@@ -180,24 +185,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if action_type:
             action_obj = {"action": action_type}
             
+            # --- CASE A: Service Call (Complex conversion) ---
             if action_type == "call-service":
                 raw_actions = call.data.get(ATTR_SERVICE_ACTION)
                 
                 if raw_actions and len(raw_actions) > 0:
                     first_action = raw_actions[0]
+                    
+                    # 1. Get Service Name (Handles new 'action' key or old 'service' key)
                     service_name = first_action.get("action") or first_action.get("service")
                     if service_name:
                         action_obj["service"] = service_name
                     
+                    # 2. Merge 'target' and 'data' into 'service_data'
                     service_data = {}
+                    
                     if "data" in first_action:
                         service_data.update(first_action["data"])
+                    
                     if "target" in first_action:
+                        # Flatten target (e.g., {'entity_id': 'light.bed'}) into service_data
                         service_data.update(first_action["target"])
                     
                     if service_data:
                         action_obj["service_data"] = service_data
 
+            # --- CASE B: Navigation / URL ---
             elif action_type == "navigate":
                 action_obj["navigation_path"] = call.data.get(ATTR_NAVIGATION_PATH)
             elif action_type == "url":
@@ -206,6 +219,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             new_msg["tap_action"] = action_obj
             
         elif ATTR_TAP_ACTION in call.data:
+            # Legacy fallback
             new_msg["tap_action"] = call.data[ATTR_TAP_ACTION]
 
         # 4. Handle Confirmation override
