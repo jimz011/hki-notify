@@ -1,5 +1,6 @@
 import logging
 import voluptuous as vol
+import homeassistant.util.dt as dt_util  # <--- NEW IMPORT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import config_validation as cv
@@ -20,6 +21,7 @@ ATTR_ID = "id"
 ATTR_MESSAGE = "message"
 ATTR_ICON = "icon"
 ATTR_ICON_SPIN = "icon_spin"
+ATTR_TIMESTAMP = "timestamp"  # <--- NEW CONSTANT
 
 # Color attributes
 ATTR_TEXT_COLOR = "text_color"
@@ -74,6 +76,9 @@ CREATE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ICON, default="mdi:bell"): cv.string,
     vol.Optional(ATTR_ICON_SPIN, default=False): cv.boolean,
     
+    # NEW: Optional timestamp override
+    vol.Optional(ATTR_TIMESTAMP): cv.string,
+
     # Colors
     vol.Optional(ATTR_TEXT_COLOR): vol.Any(cv.string, list),
     vol.Optional(ATTR_ICON_COLOR): vol.Any(cv.string, list),
@@ -136,11 +141,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return targets
 
     def handle_create(call: ServiceCall):
+        # NEW: Handle Timestamp logic
+        # Use provided timestamp or current time (ISO Format)
+        ts = call.data.get(ATTR_TIMESTAMP)
+        if not ts:
+            ts = dt_util.now().isoformat()
+
         new_msg = {
             "id": call.data[ATTR_ID],
             "message": call.data[ATTR_MESSAGE],
             "icon": call.data[ATTR_ICON],
             "icon_spin": call.data[ATTR_ICON_SPIN],
+            "timestamp": ts,  # <--- Added here
         }
         
         # 1. Handle Colors
@@ -167,7 +179,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         action_type = call.data.get(ATTR_ACTION_TYPE)
         
         # FIX: Auto-detect 'call-service' if not set but service data is present
-        # This handles cases where the UI Action selector is used but 'action_type' dropdown is empty
         if not action_type and call.data.get(ATTR_SERVICE_ACTION):
             action_type = "call-service"
         

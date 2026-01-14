@@ -28,7 +28,12 @@ create:
       default: false
       selector:
         boolean:
-
+    timestamp:
+      name: Timestamp
+      description: "Optional ISO timestamp. If omitted, current time is used."
+      selector:
+        datetime:
+        
     # --- ACTIONS ---
     action_type:
       name: Tap Action Type
