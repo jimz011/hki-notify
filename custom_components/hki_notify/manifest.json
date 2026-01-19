@@ -1,7 +1,7 @@
 {
   "domain": "hki_notify",
   "name": "HKI Notify",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "documentation": "https://github.com/jimz011/hki-notify",
   "dependencies": [],
   "codeowners": [],
