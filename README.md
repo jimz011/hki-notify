@@ -2,7 +2,7 @@
 Custom Component for use with HKI Elements
 
 ## Documentation
-For documentation **[CLICK HERE]([https://jimz011.github.io/hki-elements/](https://jimz011.github.io/hki-elements/components/hki-notify/overview/))**
+For documentation **[CLICK HERE](https://jimz011.github.io/hki-elements/components/hki-notify/overview/)**
 
 ## Support
 Found a bug or have a feature request? Please open an issue on [GitHub](https://github.com/jimz011/hki-elements/issues).
