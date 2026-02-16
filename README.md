@@ -1,7 +1,7 @@
 # HKI Notify
 Custom Component for use with HKI Elements
 
-[![Release](https://img.shields.io/github/v/release/jimz011/hki-elements.svg)](https://github.com/jimz011/hki-notify/releases)
+[![Release](https://img.shields.io/github/v/release/jimz011/hki-notify.svg)](https://github.com/jimz011/hki-notify/releases)
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Maintained](https://img.shields.io/badge/Maintained-Yes-green.svg)](https://github.com/jimz011/hki-notify/graphs/commit-activity)
