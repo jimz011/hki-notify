@@ -3,8 +3,9 @@
   "name": "HKI Notify",
   "version": "1.0.2",
   "documentation": "https://github.com/jimz011/hki-notify",
+  "issue_tracker": "https://github.com/jimz011/hki-notify/issues",
   "dependencies": [],
-  "codeowners": [],
+  "codeowners": ["@jimz011"],
   "requirements": [],
   "config_flow": true,
   "iot_class": "local_push"
