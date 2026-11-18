@@ -131,15 +131,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     def get_targets(call):
         entity_ids = call.data.get(ATTR_ENTITY_ID)
         registry = hass.data[DOMAIN]["entities"]
-        targets = []
-        if entity_ids:
-            if isinstance(entity_ids, str): entity_ids = [entity_ids]
-            for eid in entity_ids:
-                if eid in registry:
-                    targets.append(registry[eid])
-        else:
-            targets = list(registry.values())
-        return targets
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
+        return [
+            entity for entity in registry.values()
+            if not entity_ids or entity.entity_id in entity_ids
+        ]
 
     def handle_create(call: ServiceCall):
         # NEW: Handle Timestamp logic

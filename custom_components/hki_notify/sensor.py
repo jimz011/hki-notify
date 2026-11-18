@@ -1,5 +1,5 @@
 import logging
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 from .const import DOMAIN
 
@@ -23,7 +23,7 @@ class HKINotifySensor(RestoreEntity):
         # Register in global registry
         if DOMAIN not in self._hass.data:
             self._hass.data[DOMAIN] = {"entities": {}}
-        self._hass.data[DOMAIN]["entities"][self.entity_id] = self
+        self._hass.data[DOMAIN]["entities"][self.unique_id] = self
 
         # Restore
         state = await self.async_get_last_state()
@@ -32,7 +32,12 @@ class HKINotifySensor(RestoreEntity):
 
     async def async_will_remove_from_hass(self):
         if DOMAIN in self._hass.data and "entities" in self._hass.data[DOMAIN]:
-            self._hass.data[DOMAIN]["entities"].pop(self.entity_id, None)
+            self._hass.data[DOMAIN]["entities"].pop(self.unique_id, None)
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place renames; the registry uses stable unique IDs."""
+        super().async_entity_id_changed(old_entity_id)
 
     def add_message(self, msg):
         """Add or update a message. Creates a NEW list to force state update."""
